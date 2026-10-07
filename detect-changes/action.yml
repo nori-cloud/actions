@@ -1,0 +1,66 @@
+name: Detect Changes
+description: Filter a JSON app list to entries changed between two refs
+
+inputs:
+  app-list:
+    description: JSON array of app objects with app, dockerfile, and paths
+    required: true
+  base:
+    description: Base ref for git diff (for example HEAD^1)
+    required: false
+    default: ""
+  ref:
+    description: Head ref for git diff
+    required: false
+    default: HEAD
+
+outputs:
+  apps:
+    description: Full JSON array of app configs
+    value: ${{ steps.detect.outputs.apps }}
+  changed_apps:
+    description: Filtered JSON array of changed apps
+    value: ${{ steps.detect.outputs.changed_apps }}
+  has-changes:
+    description: Whether any apps have changes
+    value: ${{ steps.detect.outputs.has-changes }}
+
+runs:
+  using: composite
+  steps:
+    - id: detect
+      shell: bash
+      env:
+        APP_LIST: ${{ inputs.app-list }}
+        BASE: ${{ inputs.base }}
+        REF: ${{ inputs.ref }}
+      run: |
+        set -euo pipefail
+        apps=$(jq -c '.' <<<"${APP_LIST}")
+        echo "apps=${apps}" >> "${GITHUB_OUTPUT}"
+
+        if [ -z "${BASE}" ]; then
+          echo "changed_apps=${apps}" >> "${GITHUB_OUTPUT}"
+          echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+          exit 0
+        fi
+
+        changed=$(git diff --name-only "${BASE}...${REF}")
+        matrix=$(jq -c --arg changed "${changed}" '
+          ($changed | split("\n") | map(select(length > 0))) as $files |
+          [.[] | . as $app |
+            (if $app.paths then ($app.paths | map(rtrimstr("/**")))
+             else [(if $app.dockerfile then
+               ($app.dockerfile | split("/") | .[:-1] | join("/"))
+             else ("apps/" + $app.app) end)] end) as $prefixes |
+            select([$files[] as $f | $prefixes[] as $p |
+              if ($f | startswith($p + "/")) then true else empty end
+            ] | length > 0)
+          ]' <<<"${apps}")
+
+        echo "changed_apps=${matrix}" >> "${GITHUB_OUTPUT}"
+        if [ "$(jq 'length' <<<"${matrix}")" -gt 0 ]; then
+          echo "has-changes=true" >> "${GITHUB_OUTPUT}"
+        else
+          echo "has-changes=false" >> "${GITHUB_OUTPUT}"
+        fi
