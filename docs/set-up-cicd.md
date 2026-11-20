@@ -71,7 +71,8 @@ references `@main`; pin a reviewed commit containing the action for production.
 
 ## What should I change?
 
-1. Replace `app-list` in both CI and CD with your apps. For example:
+1. Replace `app-list` in both CI and CD with your apps, or keep one JSON file
+   and pass `app-list-file` to both calls. For example:
 
    ```json
    [{"app": "outpost", "paths": ["apps/outpost/**", "packages/ui/**"]}]
@@ -86,6 +87,10 @@ references `@main`; pin a reviewed commit containing the action for production.
    uses `HEAD^1` with two commits fetched, covering only the last commit.
    Adjust the comparison for multi-commit pushes. Its CD trigger only includes
    `apps/**` and `packages/**`, not root lockfile changes.
+   The shared [change detector](../detect-changes/README.md) supports opt-in
+   root-file detection and comparison against the last successful delivery.
+   These require a commit containing the new inputs; change the caller's
+   trigger and fetch depth as described there rather than copying local scripts.
 4. Replace the promotion app inputs, `PROMOTE_*` variables, and matching shell
    selection lines together. Leave `sha` blank to follow each app's dev tag,
    or supply a full SHA with an existing image.

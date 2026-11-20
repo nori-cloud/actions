@@ -4,7 +4,27 @@ description: Filter a JSON app list to entries changed between two refs
 inputs:
   app-list:
     description: JSON array of app objects with app, dockerfile, and paths
-    required: true
+    required: false
+    default: ''
+  app-list-file:
+    description: Path to a JSON app list (use instead of app-list)
+    required: false
+    default: ''
+  include-root-changes:
+    description: Select all apps for root-file or .github changes
+    required: false
+    default: 'false'
+  delivery-workflow:
+    description: Workflow filename whose last successful push is the comparison base
+    required: false
+    default: ''
+  delivery-branch:
+    description: Branch used for delivery history and outdated-ref checks
+    required: false
+    default: main
+  token:
+    description: GitHub token with actions read permission (required for delivery-workflow)
+    required: false
   base:
     description: Base ref for git diff (for example HEAD^1)
     required: false
@@ -32,35 +52,11 @@ runs:
       shell: bash
       env:
         APP_LIST: ${{ inputs.app-list }}
+        APP_LIST_FILE: ${{ inputs.app-list-file }}
+        INCLUDE_ROOT_CHANGES: ${{ inputs.include-root-changes }}
+        DELIVERY_WORKFLOW: ${{ inputs.delivery-workflow }}
+        DELIVERY_BRANCH: ${{ inputs.delivery-branch }}
+        GH_TOKEN: ${{ inputs.token }}
         BASE: ${{ inputs.base }}
         REF: ${{ inputs.ref }}
-      run: |
-        set -euo pipefail
-        apps=$(jq -c '.' <<<"${APP_LIST}")
-        echo "apps=${apps}" >> "${GITHUB_OUTPUT}"
-
-        if [ -z "${BASE}" ]; then
-          echo "changed_apps=${apps}" >> "${GITHUB_OUTPUT}"
-          echo "has-changes=true" >> "${GITHUB_OUTPUT}"
-          exit 0
-        fi
-
-        changed=$(git diff --name-only "${BASE}...${REF}")
-        matrix=$(jq -c --arg changed "${changed}" '
-          ($changed | split("\n") | map(select(length > 0))) as $files |
-          [.[] | . as $app |
-            (if $app.paths then ($app.paths | map(rtrimstr("/**")))
-             else [(if $app.dockerfile then
-               ($app.dockerfile | split("/") | .[:-1] | join("/"))
-             else ("apps/" + $app.app) end)] end) as $prefixes |
-            select([$files[] as $f | $prefixes[] as $p |
-              if ($f | startswith($p + "/")) then true else empty end
-            ] | length > 0)
-          ]' <<<"${apps}")
-
-        echo "changed_apps=${matrix}" >> "${GITHUB_OUTPUT}"
-        if [ "$(jq 'length' <<<"${matrix}")" -gt 0 ]; then
-          echo "has-changes=true" >> "${GITHUB_OUTPUT}"
-        else
-          echo "has-changes=false" >> "${GITHUB_OUTPUT}"
-        fi
+      run: bash "$GITHUB_ACTION_PATH/detect.sh"

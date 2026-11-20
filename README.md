@@ -7,7 +7,7 @@ Shared GitHub Actions for nori-cloud repositories.
 | Action | Purpose |
 | --- | --- |
 | `setup` | Install pnpm dependencies with Node.js caching |
-| `detect-changes` | Filter an app matrix to changed applications |
+| [`detect-changes`](detect-changes/README.md) | Filter an app matrix to changed applications |
 | `build-image` | Build and optionally publish an app image to GHCR |
 | `gitops-update-overlay` | Update a Kustomize image tag in `nori-cloud/apps` |
 | `move-tag` | Move an environment tag and create a timestamped tag |
