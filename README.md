@@ -13,6 +13,11 @@ Shared GitHub Actions for nori-cloud repositories.
 
 ## Usage
 
+- [Set up CI/CD](docs/set-up-cicd.md): CI checks, image publishing, and promotion
+  using Factory's pipeline.
+- [Set up GitOps apps](docs/set-up-gitops-apps.md): repository layout,
+  environment overlays, and high-level Argo CD configuration.
+
 Reference a version tag or commit SHA from a workflow:
 
 ```yaml
