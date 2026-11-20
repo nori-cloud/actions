@@ -51,7 +51,7 @@ Create a GitHub App with **Contents: Read and write**, install it on
 
 Allow the App to push under the GitOps repository's branch rules. Allow the
 workflow's `GITHUB_TOKEN` **packages: write** for GHCR and **contents: write**
-for tags and releases, including on reusable-workflow calls. Tag rules must
+for tags and releases. Tag rules must
 permit moving `<app>-dev` and `<app>-prod`.
 
 ## Which workflow files should I copy?
@@ -61,11 +61,13 @@ Copy these into your application's `.github/workflows/`, keeping their names:
 | Factory file | Purpose |
 | --- | --- |
 | [ci.yaml](https://github.com/nori-cloud/factory/blob/main/.github/workflows/ci.yaml) | Pull request checks |
-| [build-image.yaml](https://github.com/nori-cloud/factory/blob/main/.github/workflows/build-image.yaml) | Reusable Docker build and GHCR publishing |
 | [cd.yaml](https://github.com/nori-cloud/factory/blob/main/.github/workflows/cd.yaml) | Dev image-pin updates on merge |
 | [prod-promote.yaml](https://github.com/nori-cloud/factory/blob/main/.github/workflows/prod-promote.yaml) | Manual production promotion |
 
-Pin external actions to reviewed commit SHAs for production.
+Image builds call the shared
+[`build-image` action](../README.md#how-do-i-build-an-image) from `nori-cloud/actions`
+under `steps`, after checkout; do not copy a local image workflow. Factory
+references `@main`; pin a reviewed commit containing the action for production.
 
 ## What should I change?
 

@@ -1,0 +1,9 @@
+{
+  "skills": [
+    {
+      "name": "set-up-cicd",
+      "version": "1",
+      "files": ["SKILL.md"]
+    }
+  ]
+}
