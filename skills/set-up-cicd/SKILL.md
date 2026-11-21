@@ -44,10 +44,19 @@ silently restoring the old reusable workflow.
    shared packages, and root lockfile changes. Explain any gaps rather than
    silently widening triggers. Check concurrent GitOps pushes and propose
    serialization where needed; selecting one app does not prevent overlapping runs.
-5. Follow the guide for GitHub App secrets, GHCR access, branch/tag rules,
-   and promotion. Never request secret values in chat or commit credentials.
-   Report human-only setup separately. Do not claim deployment is verified
-   merely because workflows were generated.
+5. Before declaring delivery ready, follow the guide's
+   [access setup](https://github.com/nori-cloud/actions/blob/main/docs/set-up-cicd.md#how-do-i-configure-access).
+   Use the existing GitOps App documented there, verify it is installed on
+   `nori-cloud/apps`, and check that the application repository or each deployment
+   environment provides `GITOPS_APP_ID` and `GITOPS_APP_PRIVATE_KEY`. The token
+   action accepts the Client ID (recommended) or numeric App ID through its
+   `app-id` input. Both identifiers are public; keep their values and settings
+   link authoritative in the guide. This installation-token flow requires the
+   private key, not an OAuth client secret. Never request secret values in chat
+   or commit credentials.
+   Also review GHCR access, branch/tag rules, and promotion. Report missing
+   credentials and human-only setup as blockers. Do not claim deployment is
+   verified merely because workflows were generated.
 6. Pin shared actions to reviewed commits containing the required action.
    Verify refs instead of assuming every action is available at the same
    release tag. Never move release tags, publish, push, or trigger deployment

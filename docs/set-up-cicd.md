@@ -41,13 +41,35 @@ sequenceDiagram
 
 ## How do I configure access?
 
-Create a GitHub App with **Contents: Read and write**, install it on
-`nori-cloud/apps`, and add these secrets to the application repository:
+Use the existing [gh-action-gitops-app](https://github.com/organizations/nori-cloud/settings/apps/gh-action-gitops-app),
+which has **Contents: Read and write**:
 
-| Secret | Value |
+| Public identifier | Value |
 | --- | --- |
-| `GITOPS_APP_ID` | GitHub App ID |
-| `GITOPS_APP_PRIVATE_KEY` | Complete PEM private key |
+| App ID | `5222975` |
+| Client ID | `Iv23lioHkMjuxCBtDmA1` |
+
+Install the App on `nori-cloud/apps`, then configure these Actions secrets in
+the **application repository** (for example, `nori-cloud/koukou`), not the GitOps
+repository:
+
+Retrieve the Client ID and private key from the
+[GitOps App credentials in Infisical](https://infisical.hoki-sole.ts.net/organizations/ebbe526b-20af-410a-a392-1a668e8208a4/projects/secret-management/ba06b3c1-1db1-4809-a433-74afbb6fafdf/overview).
+Copy the private key directly into GitHub Actions secrets without printing it
+in logs, pasting it into chat, or committing it.
+
+- `GITOPS_APP_ID`: use the Client ID above (recommended by GitHub). The numeric
+  App ID also works; the token action still calls this input `app-id`.
+- `GITOPS_APP_PRIVATE_KEY`: the App's complete PEM private key from Infisical.
+  New keys are generated from the App's settings page.
+
+Both identifiers are safe to commit. The current workflow callers read
+`GITOPS_APP_ID` from secrets for compatibility; it is not a confidential value.
+The [installation-token flow](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-json-web-token-jwt-for-a-github-app)
+requires a private key to sign a JWT. An OAuth client secret cannot replace it.
+If using environment secrets instead, configure every deployment environment
+that needs access (`dev` and `prod`). Treat missing credentials as a setup
+blocker, not a validated deployment.
 
 Allow the App to push under the GitOps repository's branch rules. Allow the
 workflow's `GITHUB_TOKEN` **packages: write** for GHCR and **contents: write**
